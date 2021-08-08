@@ -46,10 +46,10 @@ type MatchScoreData struct { //must be a capital letter to be exported and the f
 	MatchScore float64
 }
 
-func Hello() {
+func Hello(name string) {
 
 	//Basic HTTP Get request
-	url := BaseURL + "/hello/IDSL"
+	url := BaseURL + "/hello/" + name
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Println("Error reading response. ", err)
