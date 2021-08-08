@@ -131,10 +131,6 @@ func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 	// If you don't close it, your request will be missing the terminating boundary.
 	writer.Close()
 
-	//q := u.Query()
-	//q.Set("access_token", token)
-	//u.RawQuery = q.Encode()
-
 	hdr := make(http.Header)
 	hdr.Set("Content-Type", writer.FormDataContentType())
 
