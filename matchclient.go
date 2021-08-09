@@ -13,7 +13,6 @@ import (
 	"net/textproto"
 	"net/url"
 	"os"
-	"time"
 )
 
 const (
@@ -46,7 +45,20 @@ type MatchScoreData struct { //must be a capital letter to be exported and the f
 	MatchScore float64
 }
 
-func Hello(name string) {
+// HTTPClient interface
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+var (
+	Client HTTPClient
+)
+
+func init() {
+	Client = &http.Client{}
+}
+
+func Hello(name string) (string, error) {
 
 	//Basic HTTP Get request
 	url := BaseURL + "/hello/" + name
@@ -56,9 +68,9 @@ func Hello(name string) {
 	}
 
 	req.Header.Set("Cache-Control", "no-cache")
-	client := &http.Client{Timeout: time.Second * 10}
-
-	resp, err := client.Do(req)
+	//client := &http.Client{Timeout: time.Second * 10}
+	//resp, err := client.Do(req)
+	resp, err := Client.Do(req)
 	if err != nil {
 		fmt.Println("Error reading response. ", err)
 	}
@@ -71,6 +83,7 @@ func Hello(name string) {
 	}
 
 	fmt.Printf("%s\n", body)
+	return string(body), nil
 }
 
 func MatchFiles(values []string) (MatchScoreData, error) {
@@ -83,6 +96,7 @@ func MatchFiles(values []string) (MatchScoreData, error) {
 	return matchScore, nil
 }
 
+//TODO desparately needs refactoring
 func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 
 	u, err := url.Parse(dst)
@@ -151,7 +165,8 @@ func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 
 	// Call the api client
 	fmt.Println("make the api call")
-	resp, err := http.DefaultClient.Do(&req)
+	//resp, err := http.DefaultClient.Do(&req)
+	resp, err := Client.Do(&req)
 	if err != nil {
 		return MatchScoreData{}, fmt.Errorf("failed to perform http request: %w", err)
 	}
@@ -216,9 +231,9 @@ func GetAllMatchScores() (AllMatchScoresResponse, error) {
 	}
 
 	req.Header.Set("Cache-Control", "no-cache")
-	client := &http.Client{Timeout: time.Second * 10}
-
-	resp, err := client.Do(req)
+	//client := &http.Client{Timeout: time.Second * 10}
+	//resp, err := client.Do(req)
+	resp, err := Client.Do(req)
 	if err != nil {
 		return AllMatchScoresResponse{}, fmt.Errorf("failed to perform http request: %w", err)
 	}
