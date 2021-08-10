@@ -30,7 +30,7 @@ type MatchScoreResponse struct {
 	FileName2   string  `json:"fileName2"`
 }
 
-type AllMatchScoresResponse []struct {
+type AllMatchScoresResponse struct {
 	ID         string  `json:"id"`
 	Dir1       string  `json:"dir1"`
 	File1Name  string  `json:"file1Name"`
@@ -39,7 +39,7 @@ type AllMatchScoresResponse []struct {
 	MatchScore float64 `json:"matchScore"`
 }
 
-type MatchScoreData struct { //must be a capital letter to be exported and the fields
+type MatchScoreData struct {
 	FileName1  string
 	FileName2  string
 	MatchScore float64
