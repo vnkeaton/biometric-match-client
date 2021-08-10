@@ -45,6 +45,15 @@ type MatchScoreData struct { //must be a capital letter to be exported and the f
 	MatchScore float64
 }
 
+type AllImagesResponse []struct {
+	Id       string
+	Dir      string
+	FileName string
+	FileType string
+	Size     int64
+	Data     []byte
+}
+
 // HTTPClient interface
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -88,7 +97,7 @@ func Hello(name string) (string, error) {
 
 func MatchFiles(values []string) (MatchScoreData, error) {
 	dst := BaseURL + "/image/match"
-	fmt.Println("call upload files")
+	//fmt.Println("call upload files")
 	matchScore, err := UploadFiles(dst, values)
 	if err != nil {
 		return MatchScoreData{}, fmt.Errorf("failed to get match score data: %w", err)
@@ -164,14 +173,14 @@ func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 	//req.Header.Set("Content-Length", b.Len())
 
 	// Call the api client
-	fmt.Println("make the api call")
+	//fmt.Println("make the api call")
 	//resp, err := http.DefaultClient.Do(&req)
 	resp, err := Client.Do(&req)
 	if err != nil {
 		return MatchScoreData{}, fmt.Errorf("failed to perform http request: %w", err)
 	}
 	if resp.Body != nil {
-		fmt.Println("body not nil")
+		//fmt.Println("body not nil")
 		defer resp.Body.Close()
 	}
 
@@ -184,7 +193,7 @@ func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 		return MatchScoreData{}, fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	fmt.Println("create json response")
+	//fmt.Println("create json response")
 
 	//create json response, response body is []bytes to the go struct ptr
 	matchScoreBody, err := ioutil.ReadAll(resp.Body)
@@ -193,16 +202,15 @@ func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 		return MatchScoreData{}, fmt.Errorf("error reading body: %w", err)
 	}
 
-	fmt.Println("unmarshall byte code")
+	//fmt.Println("unmarshall byte code")
 
 	var matchScore MatchScoreResponse
 	jsonErr := json.Unmarshal(matchScoreBody, &matchScore)
 	if jsonErr != nil {
-		fmt.Println("am i here?")
 		return MatchScoreData{}, fmt.Errorf("can not unmarshal Json: %w", err)
 	}
 
-	fmt.Println("return match score structure")
+	//fmt.Println("return match score structure")
 
 	return MatchScoreData{
 		FileName1:  matchScore.FileName1,
@@ -238,7 +246,7 @@ func GetAllMatchScores() (AllMatchScoresResponse, error) {
 		return AllMatchScoresResponse{}, fmt.Errorf("failed to perform http request: %w", err)
 	}
 	if resp.Body != nil {
-		fmt.Println("body not nil")
+		//fmt.Println("body not nil")
 		defer resp.Body.Close()
 	} // Check the status code
 	if resp.StatusCode != http.StatusOK {
@@ -246,7 +254,7 @@ func GetAllMatchScores() (AllMatchScoresResponse, error) {
 		return AllMatchScoresResponse{}, fmt.Errorf("bad status: %s", resp.Status)
 	}
 
-	fmt.Println("create json response")
+	//fmt.Println("create json response")
 
 	//create json response, response body is []bytes to the go struct ptr
 	matchScoreBody, err := ioutil.ReadAll(resp.Body)
@@ -255,17 +263,17 @@ func GetAllMatchScores() (AllMatchScoresResponse, error) {
 		return AllMatchScoresResponse{}, fmt.Errorf("error reading body: %w", err)
 	}
 
-	fmt.Println("unmarshall byte code")
+	//fmt.Println("unmarshall byte code")
 
 	var matchScores AllMatchScoresResponse
 	jsonErr := json.Unmarshal(matchScoreBody, &matchScores)
 	if jsonErr != nil {
-		fmt.Println("am i here?")
 		return AllMatchScoresResponse{}, fmt.Errorf("can not unmarshal Json: %w", err)
 	}
-
 	return matchScores, nil
 }
+
+//TODO Need more client functions here, running out of time....
 
 //references:
 //stackoverflow.com/questions/20205796/post-data-using-content-type-multipart-form-data
