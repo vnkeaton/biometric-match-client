@@ -263,12 +263,7 @@ func GetAllMatchScores() ([]AllMatchScoreData, error) {
 		return []AllMatchScoreData{}, fmt.Errorf("error reading body: %w", err)
 	}
 
-	//unmarshall json and return scores
-	/*var n []AllMatchScoreData
-	if err := json.Unmarshal([]byte(matchScoreBody), &n); err != nil {
-		log.Fatal(err)
-	}*/
-	//---------------------
+	//unmarshal json response array into the data structure array
 	var matchScores []AllMatchScoreData
 	jsonErr := json.Unmarshal(matchScoreBody, &matchScores)
 	if jsonErr != nil {
@@ -276,18 +271,6 @@ func GetAllMatchScores() ([]AllMatchScoreData, error) {
 	}
 	return matchScores, nil
 }
-
-/*func (n *AllMatchScoreData) UnmarshalJSON(buf []byte) error {
-	tmp := []interface{}{&n.ID, &n.Dir1, &n.File1Name, &n.Dir2, &n.File2Name, &n.MatchScore}
-	wantLen := len(tmp)
-	if err := json.Unmarshal(buf, &tmp); err != nil {
-		return err
-	}
-	if g, e := len(tmp), wantLen; g != e {
-		return fmt.Errorf("wrong number of fields in Notification: %d != %d", g, e)
-	}
-	return nil
-}*/
 
 //TODO Need more client functions here, running out of time....
 
@@ -298,4 +281,3 @@ func GetAllMatchScores() ([]AllMatchScoreData, error) {
 //https://ayada.dev/posts/multipart-requests-in-go/
 //https://stackoverflow.com/questions/63636454/golang-multipart-file-form-request
 //https://blog.alexellis.io/golang-json-api-client/
-//https://eagain.net/articles/go-json-array-to-struct/
