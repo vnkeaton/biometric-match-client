@@ -30,7 +30,13 @@ type MatchScoreResponse struct {
 	FileName2   string  `json:"fileName2"`
 }
 
-type AllMatchScoresResponse struct {
+type MatchScoreData struct {
+	FileName1  string
+	FileName2  string
+	MatchScore float64
+}
+
+type AllMatchScoresResponse []struct {
 	ID         string  `json:"id"`
 	Dir1       string  `json:"dir1"`
 	File1Name  string  `json:"file1Name"`
@@ -39,22 +45,16 @@ type AllMatchScoresResponse struct {
 	MatchScore float64 `json:"matchScore"`
 }
 
-type MatchScoreData struct {
-	FileName1  string
-	FileName2  string
+type AllMatchScoreData struct {
+	ID         string
+	Dir1       string
+	File1Name  string
+	Dir2       string
+	File2Name  string
 	MatchScore float64
 }
 
-type AllImagesResponse []struct {
-	Id       string
-	Dir      string
-	FileName string
-	FileType string
-	Size     int64
-	Data     []byte
-}
-
-// HTTPClient interface
+// HTTPClient interface - makes testing easier
 type HTTPClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
@@ -63,6 +63,7 @@ var (
 	Client HTTPClient
 )
 
+//only at start up
 func init() {
 	Client = &http.Client{}
 }
@@ -206,7 +207,7 @@ func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 	}
 
 	//unmarshall json
-	var matchScore MatchScoreResponse
+	var matchScore MatchScoreData
 	jsonErr := json.Unmarshal(matchScoreBody, &matchScore)
 	if jsonErr != nil {
 		return MatchScoreData{}, fmt.Errorf("can not unmarshal Json: %w", err)
@@ -216,7 +217,7 @@ func UploadFiles(dst string, values []string) (MatchScoreData, error) {
 	return MatchScoreData{
 		FileName1:  matchScore.FileName1,
 		FileName2:  matchScore.FileName2,
-		MatchScore: matchScore.MatchResult,
+		MatchScore: matchScore.MatchScore,
 	}, nil
 }
 
@@ -231,7 +232,7 @@ func DumpRequest(req *http.Request) {
 }
 
 // GetAllMatchScores calls the api endpoint to retrieve all match scores
-func GetAllMatchScores() (AllMatchScoresResponse, error) {
+func GetAllMatchScores() ([]AllMatchScoreData, error) {
 	//basic HTTP Get request
 	url := BaseURL + "/matchscore/downloadFile/all"
 	req, err := http.NewRequest("GET", url, nil)
@@ -243,7 +244,7 @@ func GetAllMatchScores() (AllMatchScoresResponse, error) {
 	req.Header.Set("Cache-Control", "no-cache")
 	resp, err := Client.Do(req)
 	if err != nil {
-		return AllMatchScoresResponse{}, fmt.Errorf("failed to perform http request: %w", err)
+		return []AllMatchScoreData{}, fmt.Errorf("failed to perform http request: %w", err)
 	}
 	if resp.Body != nil {
 		defer resp.Body.Close()
@@ -252,24 +253,41 @@ func GetAllMatchScores() (AllMatchScoresResponse, error) {
 	//check the status code
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("status code not ok")
-		return AllMatchScoresResponse{}, fmt.Errorf("bad status: %s", resp.Status)
+		return []AllMatchScoreData{}, fmt.Errorf("bad status: %s", resp.Status)
 	}
 
 	//create json response, response body is []bytes to the go struct ptr
 	matchScoreBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("matchScore body has issues")
-		return AllMatchScoresResponse{}, fmt.Errorf("error reading body: %w", err)
+		return []AllMatchScoreData{}, fmt.Errorf("error reading body: %w", err)
 	}
 
 	//unmarshall json and return scores
-	var matchScores AllMatchScoresResponse
+	/*var n []AllMatchScoreData
+	if err := json.Unmarshal([]byte(matchScoreBody), &n); err != nil {
+		log.Fatal(err)
+	}*/
+	//---------------------
+	var matchScores []AllMatchScoreData
 	jsonErr := json.Unmarshal(matchScoreBody, &matchScores)
 	if jsonErr != nil {
-		return AllMatchScoresResponse{}, fmt.Errorf("can not unmarshal Json: %w", err)
+		return []AllMatchScoreData{}, fmt.Errorf("can not unmarshal Json: %w", err)
 	}
 	return matchScores, nil
 }
+
+/*func (n *AllMatchScoreData) UnmarshalJSON(buf []byte) error {
+	tmp := []interface{}{&n.ID, &n.Dir1, &n.File1Name, &n.Dir2, &n.File2Name, &n.MatchScore}
+	wantLen := len(tmp)
+	if err := json.Unmarshal(buf, &tmp); err != nil {
+		return err
+	}
+	if g, e := len(tmp), wantLen; g != e {
+		return fmt.Errorf("wrong number of fields in Notification: %d != %d", g, e)
+	}
+	return nil
+}*/
 
 //TODO Need more client functions here, running out of time....
 
@@ -280,3 +298,4 @@ func GetAllMatchScores() (AllMatchScoresResponse, error) {
 //https://ayada.dev/posts/multipart-requests-in-go/
 //https://stackoverflow.com/questions/63636454/golang-multipart-file-form-request
 //https://blog.alexellis.io/golang-json-api-client/
+//https://eagain.net/articles/go-json-array-to-struct/

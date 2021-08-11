@@ -15,15 +15,6 @@ func init() {
 	Client = &mocks.MockClient{}
 }
 
-type AllMatchScores []struct {
-	ID         string
-	Dir1       string
-	File1Name  string
-	Dir2       string
-	File2Name  string
-	MatchScore float64
-}
-
 // TestHelloName calls matchclient.Hello with a name,
 // checking for an error.
 func TestHelloName(t *testing.T) {
@@ -60,11 +51,11 @@ func TestHelloEmpty(t *testing.T) {
 
 // TestUploadFiles calls matchclient.UploadFiles
 func TestMatchFiles(t *testing.T) {
-	expectedJson := `{"matchResult": 6,"fileName1": "1.png","fileName2": "2.png"}`
+	expectedJson := `{"matchResult": 0,"fileName1": "1.png","fileName2": "1.png"}`
 	var matchScore MatchScoreData
 	matchScore.FileName1 = "1.png"
-	matchScore.FileName2 = "2.png"
-	matchScore.MatchScore = 6
+	matchScore.FileName2 = "1.png"
+	matchScore.MatchScore = 0
 	r := ioutil.NopCloser(bytes.NewReader([]byte(expectedJson)))
 	mocks.GetDoFunc = func(*http.Request) (*http.Response, error) {
 		return &http.Response{
@@ -72,7 +63,7 @@ func TestMatchFiles(t *testing.T) {
 			Body:       r,
 		}, nil
 	}
-	images := []string{"./testData/1.png", "./testData/2.png"}
+	images := []string{"./testData/1.png", "./testData/1.png"}
 	resp, err := MatchFiles(images)
 	fmt.Println(resp)
 	assert.NotNil(t, resp)
@@ -84,7 +75,7 @@ func TestMatchFiles(t *testing.T) {
 
 // TestGetAllMatchScores calls matchclient.GetAllMatchScores
 func TestGetAllMatchScores(t *testing.T) {
-	expectedJson := `[{"id": "1","dir1": "images","file1Name": "1.png","dir2": "images","file2Name": "6.png","matchScore": 3.00}]`
+	expectedJson := `[{"id": "1","dir1": "images","file1Name": "1.png","dir2": "images","file2Name": "6.png","matchScore": 3}]`
 	fmt.Println(expectedJson)
 	r := ioutil.NopCloser(bytes.NewReader([]byte(expectedJson)))
 	mocks.GetDoFunc = func(*http.Request) (*http.Response, error) {
@@ -93,17 +84,17 @@ func TestGetAllMatchScores(t *testing.T) {
 			Body:       r,
 		}, nil
 	}
-	resp, _ := GetAllMatchScores()
+	resp, err := GetAllMatchScores()
 	fmt.Println(resp)
 	assert.NotNil(t, resp)
-	//assert.Nil(t, err)
-	/*for _, r := range resp {
+	assert.Nil(t, err)
+	for _, r := range resp {
 		assert.EqualValues(t, "images", r.Dir1)
 		assert.EqualValues(t, "images", r.Dir2)
-		assert.EqualValues(t, "1,png", r.File1Name)
-		assert.EqualValues(t, "2,png", r.File2Name)
-		assert.EqualValues(t, "3.00", r.MatchScore)
-	}*/
+		assert.EqualValues(t, "1.png", r.File1Name)
+		assert.EqualValues(t, "6.png", r.File2Name)
+		assert.EqualValues(t, 3, r.MatchScore)
+	}
 }
 
 //TODO Should have more tests but I am running out of time
